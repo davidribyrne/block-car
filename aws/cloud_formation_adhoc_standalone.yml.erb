@@ -103,9 +103,12 @@ Resources:
         - PolicyName: s3
           PolicyDocument:
             Statement:
-              Effect: Allow
-              Action: ['s3:GetObject']
-              Resource: 'arn:aws:s3:::cdo-dist/*'
+              - Effect: Allow
+                Action: ['s3:GetObject']
+                Resource: 'arn:aws:s3:::cdo-dist/*'
+              - Effect: Allow
+                Action: ['iam:GetServerCertificate']
+                Resource: '*'
   RootInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:

@@ -11,11 +11,7 @@ function meta() {
 }
 
 function server_cert() {
-  aws iam get-server-certificate --server-certificate-name "$1" | \
-   /bin/bash -c 'tee >(jq -r .ServerCertificate.CertificateBody > server.crt)' | \
-   jq -r '.ServerCertificate.CertificateChain' >> server.crt
-  cat server.crt
-  rm server.crt
+  aws iam get-server-certificate --server-certificate-name "$1" | jq -r ".ServerCertificate.$2"
 }
 
 CHEF_VERSION=12.7.2
@@ -26,10 +22,13 @@ FIRST_BOOT=/etc/chef/first-boot.json
 PEGASUS_KEY=$(meta Certificates.PegasusKey)
 DASHBOARD_KEY=$(meta Certificates.DashboardKey)
 
-PEGASUS_CERT=$(server_cert $(meta Certificates.PegasusName))
-DASHBOARD_CERT=$(server_cert $(meta Certificates.DashboardName))
+PEGASUS_CERT=$(server_cert $(meta Certificates.PegasusName) CertificateBody)
+DASHBOARD_CERT=$(server_cert $(meta Certificates.DashboardName) CertificateBody)
 
-cat <<JSON > ${FIRST_BOOT}
+PEGASUS_CHAIN=$(server_cert $(meta Certificates.PegasusName) CertificateChain)
+DASHBOARD_CHAIN=$(server_cert $(meta Certificates.DashboardName) CertificateChain)
+
+jq "." <<JSON > ${FIRST_BOOT}
 {
   "cdo-secrets": {
     "override_dashboard": "dashboard-<%=subdomain%>",
@@ -40,6 +39,9 @@ cat <<JSON > ${FIRST_BOOT}
       "ssl_cert": {
         "content": "${PEGASUS_CERT}"
       },
+      "ssl_chain": {
+        "content": "${PEGASUS_CHAIN}"
+      },
       "ssl_key": {
         "content": "${PEGASUS_KEY}"
       }
@@ -47,6 +49,9 @@ cat <<JSON > ${FIRST_BOOT}
     "dashboard": {
       "ssl_cert": {
         "content": "${DASHBOARD_CERT}"
+      },
+      "ssl_chain": {
+        "content": "${DASHBOARD_CHAIN}"
       },
       "ssl_key": {
         "content": "${DASHBOARD_KEY}"

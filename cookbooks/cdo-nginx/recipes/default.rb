@@ -33,6 +33,8 @@ node.default['ssl_certificate']['service']['compatibility'] = 'modern'
 pegasus_ssl_cert_provided = node['cdo-nginx']['pegasus']['ssl_key']['content'] != '' &&
   node['cdo-nginx']['pegasus']['ssl_cert']['content'] != ''
 pegasus_cert = ssl_certificate 'cdo-nginx' do
+  key_name 'pegasus-cdo-nginx.pem'
+  chain_combined_name 'pegasus-cdo-nginx.pem.chained.pem'
   namespace node['cdo-nginx']['pegasus']
   if pegasus_ssl_cert_provided
     chain_name 'cdo-chain'
@@ -44,6 +46,8 @@ end
 dashboard_ssl_cert_provided = node['cdo-nginx']['dashboard']['ssl_key']['content'] != '' &&
   node['cdo-nginx']['dashboard']['ssl_cert']['content'] != ''
 dashboard_cert = ssl_certificate 'cdo-nginx' do
+  key_name 'dashboard-cdo-nginx.pem'
+  chain_combined_name 'dashboard-cdo-nginx.pem.chained.pem'
   namespace node['cdo-nginx']['dashboard']
   if dashboard_ssl_cert_provided
     chain_name 'cdo-chain'
