@@ -29,27 +29,12 @@ end
 # Get/create the SSL cert via the `ssl_certificate` cookbook resource, if provided.
 # Otherwise, create a self-signed certificate.
 node.default['ssl_certificate']['service']['compatibility'] = 'modern'
+ssl_cert_provided = node['cdo-nginx']['ssl_key']['content'] != '' &&
+  node['cdo-nginx']['ssl_cert']['content'] != ''
 
-pegasus_ssl_cert_provided = node['cdo-nginx']['pegasus']['ssl_key']['content'] != '' &&
-  node['cdo-nginx']['pegasus']['ssl_cert']['content'] != ''
-pegasus_cert = ssl_certificate 'cdo-nginx' do
-  key_name 'pegasus-cdo-nginx.pem'
-  chain_combined_name 'pegasus-cdo-nginx.pem.chained.pem'
-  namespace node['cdo-nginx']['pegasus']
-  if pegasus_ssl_cert_provided
-    chain_name 'cdo-chain'
-    chain_source 'attribute'
-    source 'attribute'
-  end
-end
-
-dashboard_ssl_cert_provided = node['cdo-nginx']['dashboard']['ssl_key']['content'] != '' &&
-  node['cdo-nginx']['dashboard']['ssl_cert']['content'] != ''
-dashboard_cert = ssl_certificate 'cdo-nginx' do
-  key_name 'dashboard-cdo-nginx.pem'
-  chain_combined_name 'dashboard-cdo-nginx.pem.chained.pem'
-  namespace node['cdo-nginx']['dashboard']
-  if dashboard_ssl_cert_provided
+cert = ssl_certificate 'cdo-nginx' do
+  namespace node['cdo-nginx']
+  if ssl_cert_provided
     chain_name 'cdo-chain'
     chain_source 'attribute'
     source 'attribute'
@@ -61,10 +46,8 @@ template '/etc/nginx/nginx.conf' do
   user 'root'
   group 'root'
   mode '0644'
-  variables pegasus_ssl_key: pegasus_cert.key_path,
-    pegasus_ssl_cert: pegasus_cert.chain_combined_path,
-    dashboard_ssl_key: dashboard_cert.key_path,
-    dashboard_ssl_cert: dashboard_cert.chain_combined_path,
+  variables ssl_key: cert.key_path,
+    ssl_cert: cert.chain_combined_path,
     run_dir: run_unicorn
   notifies :reload, 'service[nginx]', :immediately
 end

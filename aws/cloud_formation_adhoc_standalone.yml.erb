@@ -65,11 +65,9 @@ Resources:
       ResourceSignal:
         Timeout: PT60M
     Metadata:
-      Certificates:
-<% %w(Dashboard Pegasus).each do |app| %>
-        <%=app%>Key: {'Fn::GetAtt': [<%=app%>Certificate,Outputs.Key]}
-        <%=app%>Name: {'Fn::GetAtt': [<%=app%>Certificate,Outputs.ServerCertificateName]}
-<% end %>
+      Certificate:
+        Key: {'Fn::GetAtt': [Certificate,Outputs.Key]}
+        Name: {'Fn::GetAtt': [Certificate,Outputs.ServerCertificateName]}
     Properties:
       ImageId: <%=image_id%>
       SecurityGroupIds: [Ref: WebServerSecurityGroup]
@@ -114,43 +112,39 @@ Resources:
     Properties:
       Path: '/'
       Roles: [Ref: RootRole]
-#  PegasusCDN:
-#    Type: AWS::CloudFront::Distribution
-#    Properties:
-#      DistributionConfig: <%=AWS::CloudFront.config_cloudformation(:pegasus, "origin-#{subdomain}", ["pegasus-#{subdomain}"], cloudfront_cert)%>
-#  DashboardCDN:
-#    Type: AWS::CloudFront::Distribution
-#    Properties:
-#      DistributionConfig: <%=AWS::CloudFront.config_cloudformation(:dashboard, "origin-#{subdomain}", ["dashboard-#{subdomain}"], cloudfront_cert)%>
-#  OriginDNS:
-#    Type: AWS::Route53::RecordSetGroup
-#    Properties:
-#      HostedZoneName: <%=domain%>.
-#      RecordSets:
-#        - Name: "origin-<%=subdomain%>"
-#          Type: A
-#          TTL: 60
-#          ResourceRecords: [Ref: WebServerEIP]
+  OriginDNS:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneName: <%=domain%>.
+      RecordSets:
+        - Name: "origin-<%=subdomain%>"
+          Type: A
+          TTL: 60
+          ResourceRecords: [Ref: WebServerEIP]
+  Certificate:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        Domains: "origin-<%=subdomain%>,pegasus-<%=subdomain%>,dashboard-<%=subdomain%>"
+      TemplateURL: https://s3.amazonaws.com/wjordan/template.json
+      TimeoutInMinutes: 10
 <% %w(Dashboard Pegasus).each do |app| %>
+  <%=app%>CDN:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig: <%=AWS::CloudFront.config_cloudformation(app.downcase.to_sym, "origin-#{subdomain}", ["#{app.downcase}-#{subdomain}"], true, true)%>
   <%=app%>DNS:
     Type: AWS::Route53::RecordSetGroup
     Properties:
       HostedZoneName: <%=domain%>.
       RecordSets:
         - Name: "<%=app.downcase%>-<%=subdomain%>"
-          Type: A
-          TTL: 60
-          ResourceRecords: [Ref: WebServerEIP]
-  <%=app%>Certificate:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      Parameters:
-        Domain: "<%=app.downcase%>-<%=subdomain%>"
-      TemplateURL: https://s3.amazonaws.com/wjordan/template.json
-      TimeoutInMinutes: 10
-#          AliasTarget:
-#            DNSName: {'Fn::GetAtt': [PegasusCDN, DomainName]}
-#            HostedZoneId: Z2FDTNDATAQYW2 # static ID for cloudfront aliases
+#          Type: A
+#          TTL: 60
+#          ResourceRecords: [Ref: WebServerEIP]
+          AliasTarget:
+            DNSName: {'Fn::GetAtt': [<%=app%>CDN, DomainName]}
+            HostedZoneId: Z2FDTNDATAQYW2 # static ID for cloudfront aliases
 <% end %>
 Outputs:
 <% %w(Dashboard Pegasus).each do |app| %>

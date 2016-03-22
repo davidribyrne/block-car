@@ -30,7 +30,7 @@ module AWS
       stack_name = "#{rack_env}-#{branch}"
       json_template = json_template(branch, stack_name)
       cfn = Aws::CloudFormation::Client.new
-      puts json_template
+      puts JSON.pretty_generate(JSON.parse(json_template))
       puts cfn.validate_template(
         template_body: json_template
       ).description

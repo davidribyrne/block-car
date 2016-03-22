@@ -19,14 +19,9 @@ RUN_LIST='recipe[cdo-apps]'
 BRANCH=<%=branch%>
 FIRST_BOOT=/etc/chef/first-boot.json
 
-PEGASUS_KEY=$(meta Certificates.PegasusKey)
-DASHBOARD_KEY=$(meta Certificates.DashboardKey)
-
-PEGASUS_CERT=$(server_cert $(meta Certificates.PegasusName) CertificateBody)
-DASHBOARD_CERT=$(server_cert $(meta Certificates.DashboardName) CertificateBody)
-
-PEGASUS_CHAIN=$(server_cert $(meta Certificates.PegasusName) CertificateChain)
-DASHBOARD_CHAIN=$(server_cert $(meta Certificates.DashboardName) CertificateChain)
+CERT=$(server_cert $(meta Certificate.Name) CertificateBody)
+CHAIN=$(server_cert $(meta Certificates.PegasusName) CertificateChain)
+KEY=$(meta Certificates.Key)
 
 jq "." <<JSON > ${FIRST_BOOT}
 {
@@ -35,27 +30,14 @@ jq "." <<JSON > ${FIRST_BOOT}
     "override_pegasus": "pegasus-<%=subdomain%>"
   },
   "cdo-nginx": {
-    "pegasus": {
-      "ssl_cert": {
-        "content": "${PEGASUS_CERT}"
-      },
-      "ssl_chain": {
-        "content": "${PEGASUS_CHAIN}"
-      },
-      "ssl_key": {
-        "content": "${PEGASUS_KEY}"
-      }
+    "ssl_cert": {
+      "content": "${CERT}"
     },
-    "dashboard": {
-      "ssl_cert": {
-        "content": "${DASHBOARD_CERT}"
-      },
-      "ssl_chain": {
-        "content": "${DASHBOARD_CHAIN}"
-      },
-      "ssl_key": {
-        "content": "${DASHBOARD_KEY}"
-      }
+    "ssl_chain": {
+      "content": "${CHAIN}"
+    },
+    "ssl_key": {
+      "content": "${KEY}"
     }
   },
   "omnibus_updater": {
