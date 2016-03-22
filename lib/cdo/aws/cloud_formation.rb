@@ -77,7 +77,7 @@ module AWS
     # Input filename, output ERB-processed file contents in CloudFormation JSON-compatible syntax (using Fn::Join operator).
     def self.file(filename)
       file = ERB.new(File.read(aws_dir(filename))).result(@@local_variables.instance_eval{binding})
-      {'Fn::Join' => ["\n", file.each_line.to_a]}.to_json
+      {'Fn::Join' => ["", file.each_line.to_a]}.to_json
     end
   end
 end

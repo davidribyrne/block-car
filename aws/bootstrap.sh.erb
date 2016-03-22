@@ -19,9 +19,10 @@ RUN_LIST='recipe[cdo-apps]'
 BRANCH=<%=branch%>
 FIRST_BOOT=/etc/chef/first-boot.json
 
-CERT=$(server_cert $(meta Certificate.Name) CertificateBody)
-CHAIN=$(server_cert $(meta Certificates.PegasusName) CertificateChain)
-KEY=$(meta Certificates.Key)
+NAME=$(meta Certificate.Name)
+CERT=$(server_cert ${NAME} CertificateBody)
+CHAIN=$(server_cert ${NAME} CertificateChain)
+KEY=$(meta Certificate.Key)
 
 jq "." <<JSON > ${FIRST_BOOT}
 {

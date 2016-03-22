@@ -139,7 +139,7 @@ Resources:
       HostedZoneName: <%=domain%>.
       RecordSets:
         - Name: "<%=app.downcase%>-<%=subdomain%>"
-#          Type: A
+          Type: A
 #          TTL: 60
 #          ResourceRecords: [Ref: WebServerEIP]
           AliasTarget:
